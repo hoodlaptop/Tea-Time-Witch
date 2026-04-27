@@ -1,0 +1,60 @@
+# =============================================================
+# Unreal Engine 5 - .gitignore
+# =============================================================
+
+# IDE / Editor
+.vs/
+.idea/
+.vscode/
+*.suo
+*.user
+*.userprefs
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# Auto-generated solution / project files (regen via uproject)
+*.sln
+*.xcodeproj
+*.xcworkspace
+
+# UE5 generated folders
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Plugin generated folders
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# Compiled
+*.obj
+*.pdb
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+
+# Built map data (regenerated on build)
+*_BuiltData.uasset
+
+# Local-only config
+Config/Local*
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Logs / crash
+*.log
+**/Crashes/
+**/CrashReports/
+
+# AI workflow scratch (keep originals out of repo until Processed/)
+Content/Art/AI_Generated/_scratch/
