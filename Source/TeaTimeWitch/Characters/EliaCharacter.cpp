@@ -17,6 +17,8 @@
 #include "PaperFlipbookComponent.h"
 #include "TeaCraftingComponent.h"
 #include "TeaCraftingWidget.h"
+#include "TeaShopGameMode.h"
+#include "TeaTimeWitchPlayerController.h"
 #include "Blueprint/UserWidget.h"
 
 AEliaCharacter::AEliaCharacter()
@@ -82,13 +84,6 @@ void AEliaCharacter::BeginPlay()
 				Subsystem->AddMappingContext(DefaultMappingContext, 0);
 			}
 		}
-	}
-
-	if (UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>())
-	{
-		DS->OnStarted.AddDynamic(this, &AEliaCharacter::HandleDialogueStarted);
-		DS->OnEnded.AddDynamic(this, &AEliaCharacter::HandleDialogueEnded);
-		DS->OnAction.AddDynamic(this, &AEliaCharacter::HandleDialogueAction);
 	}
 }
 
@@ -238,40 +233,25 @@ void AEliaCharacter::UpdateBillboard()
 	Flipbook->SetWorldRotation(FRotator(0.f, CamYaw + 90.f, 0.f));
 }
 
-void AEliaCharacter::OnOpenTeaCraft(const FInputActionValue& Value)
+void AEliaCharacter::OnOpenTeaCraft(const FInputActionValue&)
 {
-	if (UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>())
+	UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>();
+	if (DS && DS->bIsActive) { return; }   // 대화 중 가드
+
+	auto* TPC = Cast<ATeaTimeWitchPlayerController>(GetController());
+	auto* GM = GetWorld()->GetAuthGameMode<ATeaShopGameMode>();
+	if (!TPC || !GM) { return; }
+
+	// 토글: GameMode가 만든 HUD에 위젯이 있으면 닫고, 없으면 열기
+	if (GM->IsTeaCraftOpen())
 	{
-		if (DS->bIsActive)
-		{
-			return;
-		}
+		GM->CloseTeaCraft();
+		TPC->SetTeaShopInputState(ETeaShopInputState::Game, nullptr);
 	}
-
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	if (!PC) { return; }
-
-	if (TeaCraftingWidgetInstance && TeaCraftingWidgetInstance->IsInViewport())
+	else
 	{
-		TeaCraftingWidgetInstance->RemoveFromParent();
-		FInputModeGameOnly Mode;
-		PC->SetInputMode(Mode);
-		PC->SetShowMouseCursor(false);
-		return;
+		GM->OpenTeaCraftDirect(this);  // 대화 컨텍스트 없이 단순 열기
 	}
-
-	if (!TeaCraftingWidgetClass || !CraftingComp) { return; }
-
-	TeaCraftingWidgetInstance = CreateWidget<UTeaCraftingWidget>(PC, TeaCraftingWidgetClass);
-	if (!TeaCraftingWidgetInstance) { return; }
-
-	TeaCraftingWidgetInstance->InitWithComponent(CraftingComp);
-	TeaCraftingWidgetInstance->AddToViewport(10);
-
-	FInputModeGameAndUI Mode;
-	Mode.SetWidgetToFocus(TeaCraftingWidgetInstance->TakeWidget());
-	PC->SetInputMode(Mode);
-	PC->SetShowMouseCursor(true);
 }
 
 void AEliaCharacter::OnInteractPressed(const FInputActionValue& /*Value*/)
@@ -304,104 +284,4 @@ void AEliaCharacter::OnInteractPressed(const FInputActionValue& /*Value*/)
 	}
 
 	if (Best) { Best->TryStartDialogue(this); }
-}
-
-void AEliaCharacter::HandleDialogueStarted(ANPCBase* /*Speaker*/)
-{
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	if (!PC || !DialogueWidgetClass) { return; }
-
-	DialogueWidgetInstance = CreateWidget<UDialogueWidget>(PC, DialogueWidgetClass);
-	if (!DialogueWidgetInstance) { return; }
-	DialogueWidgetInstance->AddToViewport(5);
-
-	FInputModeGameAndUI Mode;
-	Mode.SetWidgetToFocus(DialogueWidgetInstance->TakeWidget());
-	Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-	PC->SetInputMode(Mode);
-	PC->SetShowMouseCursor(true);
-
-	// 대화 중 캐릭터 이동 잠금
-	if (UCharacterMovementComponent* M = GetCharacterMovement())
-	{
-		M->DisableMovement();
-	}
-}
-
-void AEliaCharacter::HandleDialogueEnded()
-{
-	if (DialogueWidgetInstance)
-	{
-		DialogueWidgetInstance->RemoveFromParent();
-		DialogueWidgetInstance = nullptr;
-	}
-
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
-	{
-		FInputModeGameOnly M;
-		PC->SetInputMode(M);
-		PC->SetShowMouseCursor(false);
-	}
-
-	if (UCharacterMovementComponent* M = GetCharacterMovement())
-	{
-		M->SetMovementMode(MOVE_Walking);
-	}
-
-	ExpectedRecipeID = NAME_None;
-}
-
-void AEliaCharacter::HandleDialogueAction(EDialogueAction Action, FName Param)
-{
-	if (Action != EDialogueAction::OpenTeaCraft) { return; }
-	if (!CraftingComp || !TeaCraftingWidgetClass) { return; }
-
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	if (!PC) { return; }
-
-	ExpectedRecipeID = Param;
-
-	TeaCraftingWidgetInstance = CreateWidget<UTeaCraftingWidget>(PC, TeaCraftingWidgetClass);
-	if (!TeaCraftingWidgetInstance) { return; }
-
-	TeaCraftingWidgetInstance->InitWithComponent(CraftingComp);
-	TeaCraftingWidgetInstance->AddToViewport(10);
-
-	FInputModeGameAndUI Mode;
-	Mode.SetWidgetToFocus(TeaCraftingWidgetInstance->TakeWidget());
-	PC->SetInputMode(Mode);
-	PC->SetShowMouseCursor(true);
-
-	if (!bBrewBoundForDialogue)
-	{
-		CraftingComp->OnBrewComplete.AddDynamic(
-			this, &AEliaCharacter::HandleBrewCompleteFromDialogue);
-		bBrewBoundForDialogue = true;
-	}
-}
-
-void AEliaCharacter::HandleBrewCompleteFromDialogue(const FBrewResult& Result)
-{
-	UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>();
-	if (!DS || !DS->bIsActive) { return; } // 일반(T키) 차 조합은 무시
-
-	const bool bMatched = Result.bSuccess && Result.MatchedRecipeID == ExpectedRecipeID;
-
-	if (TeaCraftingWidgetInstance)
-	{
-		TeaCraftingWidgetInstance->RemoveFromParent();
-		TeaCraftingWidgetInstance = nullptr;
-	}
-
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
-	{
-		FInputModeGameAndUI Mode;
-		if (DialogueWidgetInstance)
-		{
-			Mode.SetWidgetToFocus(DialogueWidgetInstance->TakeWidget());
-		}
-		PC->SetInputMode(Mode);
-	}
-
-	DS->NotifyActionResult(bMatched);
 }

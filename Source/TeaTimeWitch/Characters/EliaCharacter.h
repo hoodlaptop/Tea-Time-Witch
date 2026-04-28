@@ -68,7 +68,10 @@ public:
 	AEliaCharacter();
 
 	virtual void Tick(float DeltaSeconds) override;
-
+	
+	UFUNCTION(BlueprintPure)
+	class UTeaCraftingComponent* GetCraftingComp() const { return CraftingComp; }
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
@@ -120,41 +123,19 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "TeaCraft")
 	TObjectPtr<UTeaCraftingComponent> CraftingComp;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TeaCraft")
-	TSubclassOf<UTeaCraftingWidget> TeaCraftingWidgetClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
-	TSubclassOf<class UDialogueWidget> DialogueWidgetClass;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HD2D|Input")
 	TObjectPtr<UInputAction> OpenTeaCraftAction;
-
+	
 private:
-	FName ExpectedRecipeID;
-	bool bBrewBoundForDialogue = false;
-
 	void OnMove(const FInputActionValue& Value);
 
 	void UpdateState();
 	void UpdateFacingDirection();
 	void UpdateFlipbook();
 	void UpdateBillboard();
-
-	UPROPERTY()
-	TObjectPtr<UTeaCraftingWidget> TeaCraftingWidgetInstance;
-	UPROPERTY()
-	TObjectPtr<class UDialogueWidget> DialogueWidgetInstance;
+	
 
 	void OnOpenTeaCraft(const FInputActionValue& Value);
 
 	void OnInteractPressed(const FInputActionValue& Value);
-
-	UFUNCTION()
-	void HandleDialogueStarted(class ANPCBase* Speaker);
-	UFUNCTION()
-	void HandleDialogueEnded();
-	UFUNCTION()
-	void HandleDialogueAction(EDialogueAction Action, FName Param);
-	UFUNCTION()
-	void HandleBrewCompleteFromDialogue(const FBrewResult& Result);
 };
