@@ -1,13 +1,18 @@
 #include "EliaCharacter.h"
 
+#include "DialogueSystem.h"
+#include "../UI/DialogueWidget.h"
+#include "../Dialogue/TTWDialogueTypes.h"
 #include "Camera/CameraComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Engine/OverlapResult.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
+#include "NPCBase.h"
 #include "PaperFlipbook.h"
 #include "PaperFlipbookComponent.h"
 #include "TeaCraftingComponent.h"
@@ -59,7 +64,7 @@ AEliaCharacter::AEliaCharacter()
 
 	Idle_Flipbooks.SetNum(5);
 	Walk_Flipbooks.SetNum(5);
-	
+
 	CraftingComp = CreateDefaultSubobject<UTeaCraftingComponent>(TEXT("CraftingComp"));
 }
 
@@ -77,6 +82,13 @@ void AEliaCharacter::BeginPlay()
 				Subsystem->AddMappingContext(DefaultMappingContext, 0);
 			}
 		}
+	}
+
+	if (UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>())
+	{
+		DS->OnStarted.AddDynamic(this, &AEliaCharacter::HandleDialogueStarted);
+		DS->OnEnded.AddDynamic(this, &AEliaCharacter::HandleDialogueEnded);
+		DS->OnAction.AddDynamic(this, &AEliaCharacter::HandleDialogueAction);
 	}
 }
 
@@ -99,11 +111,17 @@ void AEliaCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		{
 			EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AEliaCharacter::OnMove);
 		}
-		
+
 		if (OpenTeaCraftAction)
 		{
-			EIC->BindAction(OpenTeaCraftAction, ETriggerEvent::Triggered,
-				this, &AEliaCharacter::OnOpenTeaCraft);
+			EIC->BindAction(OpenTeaCraftAction, ETriggerEvent::Started,
+			                this, &AEliaCharacter::OnOpenTeaCraft);
+		}
+
+		if (InteractAction)
+		{
+			EIC->BindAction(InteractAction, ETriggerEvent::Started,
+			                this, &AEliaCharacter::OnInteractPressed);
 		}
 	}
 }
@@ -222,12 +240,19 @@ void AEliaCharacter::UpdateBillboard()
 
 void AEliaCharacter::OnOpenTeaCraft(const FInputActionValue& Value)
 {
+	if (UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>())
+	{
+		if (DS->bIsActive)
+		{
+			return;
+		}
+	}
+
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (!PC) { return; }
 
 	if (TeaCraftingWidgetInstance && TeaCraftingWidgetInstance->IsInViewport())
 	{
-		// 닫기
 		TeaCraftingWidgetInstance->RemoveFromParent();
 		FInputModeGameOnly Mode;
 		PC->SetInputMode(Mode);
@@ -247,4 +272,136 @@ void AEliaCharacter::OnOpenTeaCraft(const FInputActionValue& Value)
 	Mode.SetWidgetToFocus(TeaCraftingWidgetInstance->TakeWidget());
 	PC->SetInputMode(Mode);
 	PC->SetShowMouseCursor(true);
+}
+
+void AEliaCharacter::OnInteractPressed(const FInputActionValue& /*Value*/)
+{
+	UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>();
+	if (DS && DS->bIsActive) { return; }
+
+	TArray<FOverlapResult> Hits;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(NPCFind), false, this);
+	GetWorld()->OverlapMultiByObjectType(
+		Hits,
+		GetActorLocation(),
+		FQuat::Identity,
+		FCollisionObjectQueryParams(ECC_Pawn),
+		FCollisionShape::MakeSphere(180.f),
+		Params);
+
+	ANPCBase* Best = nullptr;
+	float BestDistSq = TNumericLimits<float>::Max();
+	for (const FOverlapResult& H : Hits)
+	{
+		ANPCBase* NPC = Cast<ANPCBase>(H.GetActor());
+		if (!NPC) { continue; }
+		const float D = FVector::DistSquared(GetActorLocation(), NPC->GetActorLocation());
+		if (D < BestDistSq)
+		{
+			BestDistSq = D;
+			Best = NPC;
+		}
+	}
+
+	if (Best) { Best->TryStartDialogue(this); }
+}
+
+void AEliaCharacter::HandleDialogueStarted(ANPCBase* /*Speaker*/)
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC || !DialogueWidgetClass) { return; }
+
+	DialogueWidgetInstance = CreateWidget<UDialogueWidget>(PC, DialogueWidgetClass);
+	if (!DialogueWidgetInstance) { return; }
+	DialogueWidgetInstance->AddToViewport(5);
+
+	FInputModeGameAndUI Mode;
+	Mode.SetWidgetToFocus(DialogueWidgetInstance->TakeWidget());
+	Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	PC->SetInputMode(Mode);
+	PC->SetShowMouseCursor(true);
+
+	// 대화 중 캐릭터 이동 잠금
+	if (UCharacterMovementComponent* M = GetCharacterMovement())
+	{
+		M->DisableMovement();
+	}
+}
+
+void AEliaCharacter::HandleDialogueEnded()
+{
+	if (DialogueWidgetInstance)
+	{
+		DialogueWidgetInstance->RemoveFromParent();
+		DialogueWidgetInstance = nullptr;
+	}
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		FInputModeGameOnly M;
+		PC->SetInputMode(M);
+		PC->SetShowMouseCursor(false);
+	}
+
+	if (UCharacterMovementComponent* M = GetCharacterMovement())
+	{
+		M->SetMovementMode(MOVE_Walking);
+	}
+
+	ExpectedRecipeID = NAME_None;
+}
+
+void AEliaCharacter::HandleDialogueAction(EDialogueAction Action, FName Param)
+{
+	if (Action != EDialogueAction::OpenTeaCraft) { return; }
+	if (!CraftingComp || !TeaCraftingWidgetClass) { return; }
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) { return; }
+
+	ExpectedRecipeID = Param;
+
+	TeaCraftingWidgetInstance = CreateWidget<UTeaCraftingWidget>(PC, TeaCraftingWidgetClass);
+	if (!TeaCraftingWidgetInstance) { return; }
+
+	TeaCraftingWidgetInstance->InitWithComponent(CraftingComp);
+	TeaCraftingWidgetInstance->AddToViewport(10);
+
+	FInputModeGameAndUI Mode;
+	Mode.SetWidgetToFocus(TeaCraftingWidgetInstance->TakeWidget());
+	PC->SetInputMode(Mode);
+	PC->SetShowMouseCursor(true);
+
+	if (!bBrewBoundForDialogue)
+	{
+		CraftingComp->OnBrewComplete.AddDynamic(
+			this, &AEliaCharacter::HandleBrewCompleteFromDialogue);
+		bBrewBoundForDialogue = true;
+	}
+}
+
+void AEliaCharacter::HandleBrewCompleteFromDialogue(const FBrewResult& Result)
+{
+	UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>();
+	if (!DS || !DS->bIsActive) { return; } // 일반(T키) 차 조합은 무시
+
+	const bool bMatched = Result.bSuccess && Result.MatchedRecipeID == ExpectedRecipeID;
+
+	if (TeaCraftingWidgetInstance)
+	{
+		TeaCraftingWidgetInstance->RemoveFromParent();
+		TeaCraftingWidgetInstance = nullptr;
+	}
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		FInputModeGameAndUI Mode;
+		if (DialogueWidgetInstance)
+		{
+			Mode.SetWidgetToFocus(DialogueWidgetInstance->TakeWidget());
+		}
+		PC->SetInputMode(Mode);
+	}
+
+	DS->NotifyActionResult(bMatched);
 }

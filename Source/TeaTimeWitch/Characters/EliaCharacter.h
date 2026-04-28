@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../Dialogue/TTWDialogueTypes.h"
+#include "../TeaCraft/TeaCraftTypes.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "EliaCharacter.generated.h"
@@ -91,6 +93,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HD2D|Input")
 	TObjectPtr<UInputAction> MoveAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HD2D|Input")
+	TObjectPtr<UInputAction> InteractAction;
+
 	// === Sprites (8 directions) ===
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HD2D|Sprites")
 	TArray<TObjectPtr<UPaperFlipbook>> Idle_Flipbooks;
@@ -118,18 +123,38 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TeaCraft")
 	TSubclassOf<UTeaCraftingWidget> TeaCraftingWidgetClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
+	TSubclassOf<class UDialogueWidget> DialogueWidgetClass;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HD2D|Input")
 	TObjectPtr<UInputAction> OpenTeaCraftAction;
+
 private:
+	FName ExpectedRecipeID;
+	bool bBrewBoundForDialogue = false;
+
 	void OnMove(const FInputActionValue& Value);
 
 	void UpdateState();
 	void UpdateFacingDirection();
 	void UpdateFlipbook();
 	void UpdateBillboard();
-	
+
 	UPROPERTY()
 	TObjectPtr<UTeaCraftingWidget> TeaCraftingWidgetInstance;
+	UPROPERTY()
+	TObjectPtr<class UDialogueWidget> DialogueWidgetInstance;
 
 	void OnOpenTeaCraft(const FInputActionValue& Value);
+
+	void OnInteractPressed(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void HandleDialogueStarted(class ANPCBase* Speaker);
+	UFUNCTION()
+	void HandleDialogueEnded();
+	UFUNCTION()
+	void HandleDialogueAction(EDialogueAction Action, FName Param);
+	UFUNCTION()
+	void HandleBrewCompleteFromDialogue(const FBrewResult& Result);
 };
