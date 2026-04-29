@@ -53,6 +53,11 @@ void UDungeonProgressSubsystem::OnBattleResult(bool bWon)
 		if (bWasFinal) { ClearDungeon();}
 	}
 	
+	/*if (!ReturnDungeonLevel.IsNone())
+	{
+		UGameplayStatics::OpenLevel(this, ReturnDungeonLevel);
+	}*/
+	
 	// 페이지로드 정리
 	PendingBattleEncounterID = NAME_None;
 	PendingEnemyIDs.Reset();

@@ -5,21 +5,47 @@
 
 ATrenchDungeonGameMode::ATrenchDungeonGameMode()
 {
+	PrimaryActorTick.bCanEverTick = true;
+}
+
+void ATrenchDungeonGameMode::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (!GEngine) { return; }
+
+	UGameInstance* GI = GetGameInstance();
+	if (!GI) { return; }
+	UDungeonProgressSubsystem* DP = GI->GetSubsystem<UDungeonProgressSubsystem>();
+	if (!DP || !DP->bShowDungeonDebug) { return; }
+
+	const FString Msg = FString::Printf(
+		TEXT("Dungeon: %s | Cleared: %d | DungeonCleared: %s | Pending: %s"),
+		*DP->CurrentDungeonID.ToString(),
+		DP->ClearedEncounters.Num(),
+		DP->bDungeonCleared ? TEXT("YES") : TEXT("no"),
+		DP->PendingBattleEncounterID.IsNone()
+			? TEXT("(none)")
+			: *DP->PendingBattleEncounterID.ToString());
+
+	GEngine->AddOnScreenDebugMessage(9001, 0.5f, FColor::Cyan, Msg);
 }
 
 void ATrenchDungeonGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	UGameInstance* GI = GetGameInstance();
 	if (!GI) return;
 	UDungeonProgressSubsystem* DP = GI->GetSubsystem<UDungeonProgressSubsystem>();
 	if (!DP) return;
-	
+
 	DP->EnterDungeon(DungeonID);
-	
+
 	DP->OnEncounterCleared.AddDynamic(this, &ATrenchDungeonGameMode::HandleEncounterCleared);
 	DP->OnDungeonCleared.AddDynamic(this, &ATrenchDungeonGameMode::HandleDungeonCleared);
+
+	DP->bShowDungeonDebug = bShowDungeonDebug;
 }
 
 void ATrenchDungeonGameMode::HandleEncounterCleared(FName ClearedEncounterID)
@@ -29,8 +55,8 @@ void ATrenchDungeonGameMode::HandleEncounterCleared(FName ClearedEncounterID)
 
 void ATrenchDungeonGameMode::HandleDungeonCleared(FName ClearedDungeonID)
 {
-	UE_LOG(LogTemp, Log, TEXT("[Trench] Dungeon cleared : %s - return to TeaShop pending"), 
-		*ClearedDungeonID.ToString());
-	
+	UE_LOG(LogTemp, Log, TEXT("[Trench] Dungeon cleared : %s - return to TeaShop pending"),
+	       *ClearedDungeonID.ToString());
+
 	// UGameplayStatics::OpenLevel(this, TEXT("TeaShop_Whitebox"));
 }

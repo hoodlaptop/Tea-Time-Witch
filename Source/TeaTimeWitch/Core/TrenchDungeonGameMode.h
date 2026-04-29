@@ -14,6 +14,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Dungeon")
 	FName DungeonID = TEXT("Trench");
 	
+	UPROPERTY(EditDefaultsOnly, Category="Dungeon|Debug")
+	bool bShowDungeonDebug = true;
+	
+	virtual void Tick(float DeltaTime) override;
+	
 protected:
 	virtual void BeginPlay() override;
 	
