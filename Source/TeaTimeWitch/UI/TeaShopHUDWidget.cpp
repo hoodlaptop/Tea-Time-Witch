@@ -20,7 +20,7 @@ void UTeaShopHUDWidget::SetDialogueWidget(UDialogueWidget* Widget)
 {
 	if (!DialogueSlot || !Widget) { return; }
 	DialogueSlot->ClearChildren();
-    
+
 	if (UOverlaySlot* OVSlot = Cast<UOverlaySlot>(DialogueSlot->AddChild(Widget)))
 	{
 		OVSlot->SetHorizontalAlignment(HAlign_Fill);
@@ -37,7 +37,7 @@ void UTeaShopHUDWidget::SetTeaCraftWidget(UTeaCraftingWidget* Widget)
 {
 	if (!CraftingSlot || !Widget) { return; }
 	CraftingSlot->ClearChildren();
-    
+
 	if (UOverlaySlot* OVSlot = Cast<UOverlaySlot>(CraftingSlot->AddChild(Widget)))
 	{
 		OVSlot->SetHorizontalAlignment(HAlign_Fill);
@@ -48,9 +48,4 @@ void UTeaShopHUDWidget::SetTeaCraftWidget(UTeaCraftingWidget* Widget)
 void UTeaShopHUDWidget::ClearTeaCraftWidget()
 {
 	if (CraftingSlot) { CraftingSlot->ClearChildren(); }
-}
-
-void UTeaShopHUDWidget::SetDebugText(const FString& Text)
-{
-	if (DebugInfoText) { DebugInfoText->SetText(FText::FromString(Text)); }
 }

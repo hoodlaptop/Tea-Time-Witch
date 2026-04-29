@@ -93,13 +93,6 @@ FBrewResult UTeaCraftingComponent::TryBrew()
 		Result.ResultMessage = NSLOCTEXT("TeaCraft", "BrewFail", "이상한 차가 만들어졌습니다.");
 	}
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 4.f,
-		                                 Result.bSuccess ? FColor::Green : FColor::Yellow,
-		                                 Result.ResultMessage.ToString());
-	}
-
 	ClearSelection();
 	OnBrewComplete.Broadcast(Result);
 	return Result;

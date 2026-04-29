@@ -19,7 +19,7 @@ void ATeaTimeWitchPlayerController::SetTeaShopInputState(ETeaShopInputState NewS
 			FInputModeGameOnly Mode;
 			SetInputMode(Mode);
 			SetShowMouseCursor(false);
-			if (APawn* P = GetPawn()) { EnableInput(this); }
+			if (GetPawn()) { EnableInput(this); }
 			break;
 		}
 	case ETeaShopInputState::Dialogue:
@@ -29,7 +29,7 @@ void ATeaTimeWitchPlayerController::SetTeaShopInputState(ETeaShopInputState NewS
 			Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 			SetInputMode(Mode);
 			SetShowMouseCursor(true);
-			if (APawn* P = GetPawn()) { DisableInput(this); } // 캐릭터 이동 차단
+			if (GetPawn()) { DisableInput(this); } // 캐릭터 이동 차단
 			break;
 		}
 	case ETeaShopInputState::Crafting:
@@ -38,7 +38,7 @@ void ATeaTimeWitchPlayerController::SetTeaShopInputState(ETeaShopInputState NewS
 			if (FocusWidget) { Mode.SetWidgetToFocus(FocusWidget->TakeWidget()); }
 			SetInputMode(Mode);
 			SetShowMouseCursor(true);
-			if (APawn* P = GetPawn()) { DisableInput(this); }
+			if (GetPawn()) { DisableInput(this); }
 			break;
 		}
 	}

@@ -7,7 +7,7 @@
 void UDialogueWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
+
 	SetIsFocusable(true);
 
 	if (UWorld* World = GetWorld())
@@ -43,12 +43,12 @@ void UDialogueWidget::NativeDestruct()
 		DialogueSubsystem->OnStarted.RemoveDynamic(this, &UDialogueWidget::HandleStarted);
 		DialogueSubsystem->OnEnded.RemoveDynamic(this, &UDialogueWidget::HandleEnded);
 	}
-	
+
 	if (ContinueButton)
 	{
 		ContinueButton->OnClicked.RemoveDynamic(this, &UDialogueWidget::OnContinueClicked);
 	}
-	
+
 	Super::NativeDestruct();
 }
 
@@ -60,10 +60,10 @@ FReply UDialogueWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyE
 		if (Key == EKeys::SpaceBar || Key == EKeys::Enter || Key == EKeys::E)
 		{
 			DialogueSubsystem->AdvanceLine();
-			return FReply::Handled(); 
+			return FReply::Handled();
 		}
 	}
-	
+
 	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
 }
 
@@ -77,7 +77,7 @@ void UDialogueWidget::HandleLineChanged(const FDialogueLine& Line)
 	{
 		DialogueText->SetText(Line.Text);
 	}
-	
+
 	if (ContinueButton)
 	{
 		ContinueButton->SetIsEnabled(true);
@@ -86,7 +86,6 @@ void UDialogueWidget::HandleLineChanged(const FDialogueLine& Line)
 
 void UDialogueWidget::HandleStarted(ANPCBase* /*Speaker*/)
 {
-	// 필요한가?
 }
 
 void UDialogueWidget::HandleEnded()

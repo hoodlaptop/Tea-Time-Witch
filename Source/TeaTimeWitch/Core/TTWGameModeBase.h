@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/HUD.h"
-#include "BaseHUD.generated.h"
+#include "GameFramework/GameModeBase.h"
+#include "TTWGameModeBase.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class TEATIMEWITCH_API ABaseHUD : public AHUD
+class TEATIMEWITCH_API ATTWGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	

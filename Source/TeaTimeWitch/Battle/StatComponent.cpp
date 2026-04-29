@@ -33,11 +33,6 @@ int32 UStatComponent::TakeDamage(int32 RawDamage, EEmotionType DamageAroma)
 	{
 		bDeathBroadcast = true;
 		OnDied.Broadcast();
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red,
-			                                 FString::Printf(TEXT("%s defeated"), *Stats.DisplayName.ToString()));
-		}
 	}
 	return Final;
 }

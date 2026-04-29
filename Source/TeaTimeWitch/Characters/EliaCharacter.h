@@ -68,10 +68,10 @@ public:
 	AEliaCharacter();
 
 	virtual void Tick(float DeltaSeconds) override;
-	
+
 	UFUNCTION(BlueprintPure)
 	class UTeaCraftingComponent* GetCraftingComp() const { return CraftingComp; }
-	
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
@@ -111,7 +111,7 @@ protected:
 	float WalkingSpeedThresholdSq = 100.f; // |v|^2 임계값 (10 cm/s 정도)
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HD2D|Tuning")
-	bool bShowDebugMessages = true;
+	bool bShowDebugMessages = false;
 
 	// === State (read-only at runtime) ===
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HD2D|State")
@@ -125,7 +125,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HD2D|Input")
 	TObjectPtr<UInputAction> OpenTeaCraftAction;
-	
+
 private:
 	void OnMove(const FInputActionValue& Value);
 
@@ -133,7 +133,7 @@ private:
 	void UpdateFacingDirection();
 	void UpdateFlipbook();
 	void UpdateBillboard();
-	
+
 
 	void OnOpenTeaCraft(const FInputActionValue& Value);
 

@@ -81,4 +81,7 @@ protected:
 	float Delay_TurnEnd = 0.5f;
 	UPROPERTY(EditAnywhere)
 	int32 MaxTurns = 100;
+
+	UPROPERTY(EditAnywhere, Category="Debug")
+	bool bDebugTurnLog = false;
 };

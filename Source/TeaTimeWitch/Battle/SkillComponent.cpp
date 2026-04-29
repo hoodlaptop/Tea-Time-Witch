@@ -28,20 +28,9 @@ bool USkillComponent::TryUseSkill(FName SkillID, ABattleCharacter* User, ABattle
 
 	if (Row->MPCost > 0 && !UserStats->ConsumeMP(Row->MPCost)) { return false; }
 
-	const int32 OldHP = TargetStats->GetCurrentHP();
 	const int32 RawDamage = UserStats->GetAttack() + Row->BasePower;
-	const int32 Final = TargetStats->TakeDamage(RawDamage, Row->AromaType);
+	TargetStats->TakeDamage(RawDamage, Row->AromaType);
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.5f, FColor::Cyan,
-		                                 FString::Printf(TEXT("%s -> %s : %s = %d dmg (HP %d -> %d / %d)"),
-		                                                 *UserStats->GetDisplayName().ToString(),
-		                                                 *TargetStats->GetDisplayName().ToString(),
-		                                                 *Row->DisplayName.ToString(),
-		                                                 Final,
-		                                                 OldHP, TargetStats->GetCurrentHP(), TargetStats->GetMaxHP()));
-	}
 	return true;
 }
 

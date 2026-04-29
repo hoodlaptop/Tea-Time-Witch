@@ -26,7 +26,7 @@ void ATurnManager::ChangeState(EBattleState NewState)
 	StateTimer = 0.f;
 	bActionExecuted = false;
 
-	if (GEngine)
+	if (bDebugTurnLog && GEngine)
 	{
 		const UEnum* EnumPtr = StaticEnum<EBattleState>();
 		const FString Name = EnumPtr ? EnumPtr->GetNameStringByValue((int64)NewState) : TEXT("?");
@@ -103,7 +103,7 @@ void ATurnManager::BuildActionOrder()
 
 	for (ABattleCharacter* C : All) { ActionOrder.Add(C); }
 
-	if (GEngine)
+	if (bDebugTurnLog && GEngine)
 	{
 		FString Order = TEXT("Order: ");
 		for (const TObjectPtr<ABattleCharacter>& C : ActionOrder)
@@ -247,14 +247,22 @@ bool ATurnManager::CheckBattleEnd()
 	if (!EnemyAlive)
 	{
 		ChangeState(EBattleState::BattleEnd_Win);
-		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Magenta, TEXT("BATTLE WON"));
+		if (bDebugTurnLog && GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Magenta, TEXT("BATTLE WON"));
+		}
+		
 		SetActorTickEnabled(false);
 		return true;
 	}
 	if (!AllyAlive)
 	{
 		ChangeState(EBattleState::BattleEnd_Lose);
-		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, TEXT("BATTLE LOST"));
+		if (bDebugTurnLog && GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, TEXT("BATTLE LOST"));
+		}
+		
 		SetActorTickEnabled(false);
 		return true;
 	}

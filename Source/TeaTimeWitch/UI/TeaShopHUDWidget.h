@@ -21,8 +21,6 @@ public:
 	void SetTeaCraftWidget(UTeaCraftingWidget* Widget);
 	void ClearTeaCraftWidget();
 
-	void SetDebugText(const FString& Text);
-
 protected:
 	virtual void NativeConstruct() override;
 
@@ -30,8 +28,6 @@ protected:
 	TObjectPtr<UOverlay> DialogueSlot;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UOverlay> CraftingSlot;
-	UPROPERTY(meta=(BindWidgetOptional))
-	TObjectPtr<UTextBlock> DebugInfoText;
 	UPROPERTY(meta=(BindWidgetOptional))
 	TObjectPtr<UTextBlock> ControlGuideText;
 };

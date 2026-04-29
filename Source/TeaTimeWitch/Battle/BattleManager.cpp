@@ -82,6 +82,6 @@ void ABattleManager::SpawnCharacters()
 	SpawnGroup(AllyIDs, AllySpawnPoints, EBattleSide::Ally, AllyClass, Allies);
 	SpawnGroup(EnemyIDs, EnemySpawnPoints, EBattleSide::Enemy, EnemyClass, Enemies);
 
-	UE_LOG(LogTemp, Log, TEXT("[BattleManager] Spawned %d allies, %d enemies"),
+	UE_LOG(LogTemp, Verbose, TEXT("[BattleManager] Spawned %d allies, %d enemies"),
 	       Allies.Num(), Enemies.Num());
 }

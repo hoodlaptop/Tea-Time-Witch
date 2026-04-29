@@ -55,7 +55,7 @@ void ABattleCharacter::InitializeBattle(FName InCharacterID, EBattleSide InSide,
 	if (Row->DefaultSkillID != NAME_None) { SkillIDs.Add(Row->DefaultSkillID); }
 	Skills->Init(SkillTable, SkillIDs);
 
-	UE_LOG(LogTemp, Log, TEXT("[BattleCharacter] %s spawned (Side=%d, HP=%d, SPD=%d, Skill=%s)"),
+	UE_LOG(LogTemp, Verbose, TEXT("[BattleCharacter] %s spawned (Side=%d, HP=%d, SPD=%d, Skill=%s)"),
 	       *InCharacterID.ToString(), (int32)InSide, Row->MaxHP, Row->Speed,
 	       *Row->DefaultSkillID.ToString());
 }

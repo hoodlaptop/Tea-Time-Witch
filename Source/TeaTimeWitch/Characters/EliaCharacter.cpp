@@ -52,7 +52,7 @@ AEliaCharacter::AEliaCharacter()
 	FacingArrow->SetupAttachment(RootComponent);
 	FacingArrow->ArrowSize = 1.5f;
 	FacingArrow->bIsScreenSizeScaled = true;
-	FacingArrow->SetHiddenInGame(false);
+	FacingArrow->SetHiddenInGame(true);
 
 	UCharacterMovementComponent* Move = GetCharacterMovement();
 	Move->bOrientRotationToMovement = false; // 우리가 직접 처리
@@ -236,7 +236,7 @@ void AEliaCharacter::UpdateBillboard()
 void AEliaCharacter::OnOpenTeaCraft(const FInputActionValue&)
 {
 	UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>();
-	if (DS && DS->bIsActive) { return; }   // 대화 중 가드
+	if (DS && DS->bIsActive) { return; } // 대화 중 가드
 
 	auto* TPC = Cast<ATeaTimeWitchPlayerController>(GetController());
 	auto* GM = GetWorld()->GetAuthGameMode<ATeaShopGameMode>();
@@ -250,7 +250,7 @@ void AEliaCharacter::OnOpenTeaCraft(const FInputActionValue&)
 	}
 	else
 	{
-		GM->OpenTeaCraftDirect(this);  // 대화 컨텍스트 없이 단순 열기
+		GM->OpenTeaCraftDirect(this); // 대화 컨텍스트 없이 단순 열기
 	}
 }
 
