@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "TTWGameModeBase.h"
 #include "GameFramework/GameModeBase.h"
 #include "TeaShopGameMode.generated.h"
 
@@ -12,15 +13,12 @@ class AEliaCharacter;
 class ANPCBase;
 
 UCLASS()
-class TEATIMEWITCH_API ATeaShopGameMode : public AGameModeBase
+class TEATIMEWITCH_API ATeaShopGameMode : public ATTWGameModeBase
 {
 	GENERATED_BODY()
 
 public:
 	ATeaShopGameMode();
-
-	UPROPERTY(EditDefaultsOnly, Category="UI")
-	TSubclassOf<UTeaShopHUDWidget> HUDWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category="UI")
 	TSubclassOf<UDialogueWidget> DialogueWidgetClass;
@@ -50,7 +48,7 @@ protected:
 
 private:
 	UPROPERTY()
-	TObjectPtr<UTeaShopHUDWidget> HUDWidget;
+	TObjectPtr<UTeaShopHUDWidget> ShopHUD;
 	UPROPERTY()
 	TObjectPtr<UDialogueWidget> ActiveDialogueWidget;
 	UPROPERTY()

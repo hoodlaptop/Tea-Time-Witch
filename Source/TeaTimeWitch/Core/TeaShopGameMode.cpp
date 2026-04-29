@@ -14,22 +14,15 @@
 
 ATeaShopGameMode::ATeaShopGameMode()
 {
-	DefaultPawnClass = AEliaCharacter::StaticClass();
-	PlayerControllerClass = ATeaTimeWitchPlayerController::StaticClass();
+	// base class에서 처리중
 }
 
 void ATeaShopGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	if (!PC) { return; }
-
-	if (HUDWidgetClass)
-	{
-		HUDWidget = CreateWidget<UTeaShopHUDWidget>(PC, HUDWidgetClass);
-		if (HUDWidget) { HUDWidget->AddToViewport(0); }
-	}
+	
+	ShopHUD = Cast<UTeaShopHUDWidget>(HUDWidget);
+	if (!ShopHUD) return;
 
 	if (UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>())
 	{
@@ -51,12 +44,12 @@ void ATeaShopGameMode::BeginPlay()
 void ATeaShopGameMode::HandleDialogueStarted(ANPCBase* /*Speaker*/)
 {
 	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	if (!PC || !DialogueWidgetClass || !HUDWidget) { return; }
+	if (!PC || !DialogueWidgetClass || !ShopHUD) { return; }
 
 	ActiveDialogueWidget = CreateWidget<UDialogueWidget>(PC, DialogueWidgetClass);
 	if (!ActiveDialogueWidget) { return; }
 
-	HUDWidget->SetDialogueWidget(ActiveDialogueWidget);
+	ShopHUD->SetDialogueWidget(ActiveDialogueWidget);
 
 	if (auto* TPC = Cast<ATeaTimeWitchPlayerController>(PC))
 	{
@@ -66,7 +59,7 @@ void ATeaShopGameMode::HandleDialogueStarted(ANPCBase* /*Speaker*/)
 
 void ATeaShopGameMode::HandleDialogueEnded()
 {
-	if (HUDWidget) { HUDWidget->ClearDialogueWidget(); }
+	if (ShopHUD) { ShopHUD->ClearDialogueWidget(); }
 	ActiveDialogueWidget = nullptr;
 	ExpectedRecipeID = NAME_None;
 
@@ -88,14 +81,14 @@ void ATeaShopGameMode::HandleDialogueAction(EDialogueAction Action, FName Param)
 	AEliaCharacter* Elia = GetElia();
 	UTeaCraftingComponent* Comp = Elia ? Elia->GetCraftingComp() : nullptr;
 	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	if (!Comp || !PC || !TeaCraftingWidgetClass || !HUDWidget) { return; }
+	if (!Comp || !PC || !TeaCraftingWidgetClass || !ShopHUD) { return; }
 
 	ExpectedRecipeID = Param;
 
 	ActiveCraftingWidget = CreateWidget<UTeaCraftingWidget>(PC, TeaCraftingWidgetClass);
 	if (!ActiveCraftingWidget) { return; }
 	ActiveCraftingWidget->InitWithComponent(Comp);
-	HUDWidget->SetTeaCraftWidget(ActiveCraftingWidget);
+	ShopHUD->SetTeaCraftWidget(ActiveCraftingWidget);
 
 	if (auto* TPC = Cast<ATeaTimeWitchPlayerController>(PC))
 	{
@@ -110,7 +103,7 @@ void ATeaShopGameMode::HandleBrewComplete(const FBrewResult& Result)
 
 	const bool bMatched = Result.bSuccess && Result.MatchedRecipeID == ExpectedRecipeID;
 
-	if (HUDWidget) { HUDWidget->ClearTeaCraftWidget(); }
+	if (ShopHUD) { ShopHUD->ClearTeaCraftWidget(); }
 	ActiveCraftingWidget = nullptr;
 
 	if (auto* TPC = Cast<ATeaTimeWitchPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
@@ -123,20 +116,20 @@ void ATeaShopGameMode::HandleBrewComplete(const FBrewResult& Result)
 
 void ATeaShopGameMode::CloseTeaCraft()
 {
-	if (HUDWidget) { HUDWidget->ClearTeaCraftWidget(); }
+	if (ShopHUD) { ShopHUD->ClearTeaCraftWidget(); }
 	ActiveCraftingWidget = nullptr;
 }
 
 void ATeaShopGameMode::OpenTeaCraftDirect(AEliaCharacter* Elia)
 {
-	if (!Elia || !Elia->GetCraftingComp() || !TeaCraftingWidgetClass || !HUDWidget) { return; }
+	if (!Elia || !Elia->GetCraftingComp() || !TeaCraftingWidgetClass || !ShopHUD) { return; }
 	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
 	if (!PC) { return; }
 
 	ActiveCraftingWidget = CreateWidget<UTeaCraftingWidget>(PC, TeaCraftingWidgetClass);
 	if (!ActiveCraftingWidget) { return; }
 	ActiveCraftingWidget->InitWithComponent(Elia->GetCraftingComp());
-	HUDWidget->SetTeaCraftWidget(ActiveCraftingWidget);
+	ShopHUD->SetTeaCraftWidget(ActiveCraftingWidget);
 
 	if (auto* TPC = Cast<ATeaTimeWitchPlayerController>(PC))
 	{

@@ -1,6 +1,7 @@
 #include "EliaCharacter.h"
 
 #include "DialogueSystem.h"
+#include "../Battle/EnemyEncounter.h"
 #include "../UI/DialogueWidget.h"
 #include "../Dialogue/TTWDialogueTypes.h"
 #include "Camera/CameraComponent.h"
@@ -20,6 +21,7 @@
 #include "TeaShopGameMode.h"
 #include "TeaTimeWitchPlayerController.h"
 #include "Blueprint/UserWidget.h"
+#include "EngineUtils.h"
 
 AEliaCharacter::AEliaCharacter()
 {
@@ -259,29 +261,58 @@ void AEliaCharacter::OnInteractPressed(const FInputActionValue& /*Value*/)
 	UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>();
 	if (DS && DS->bIsActive) { return; }
 
-	TArray<FOverlapResult> Hits;
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(NPCFind), false, this);
-	GetWorld()->OverlapMultiByObjectType(
-		Hits,
-		GetActorLocation(),
-		FQuat::Identity,
-		FCollisionObjectQueryParams(ECC_Pawn),
-		FCollisionShape::MakeSphere(180.f),
-		Params);
-
-	ANPCBase* Best = nullptr;
-	float BestDistSq = TNumericLimits<float>::Max();
-	for (const FOverlapResult& H : Hits)
+	// 1순위: NPC
 	{
-		ANPCBase* NPC = Cast<ANPCBase>(H.GetActor());
-		if (!NPC) { continue; }
-		const float D = FVector::DistSquared(GetActorLocation(), NPC->GetActorLocation());
-		if (D < BestDistSq)
+		TArray<FOverlapResult> Hits;
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(NPCFind), false, this);
+		GetWorld()->OverlapMultiByObjectType(
+			Hits,
+			GetActorLocation(),
+			FQuat::Identity,
+			FCollisionObjectQueryParams(ECC_Pawn),
+			FCollisionShape::MakeSphere(180.f),
+			Params);
+
+		ANPCBase* Best = nullptr;
+		float BestDistSq = TNumericLimits<float>::Max();
+		for (const FOverlapResult& H : Hits)
 		{
-			BestDistSq = D;
-			Best = NPC;
+			ANPCBase* NPC = Cast<ANPCBase>(H.GetActor());
+			if (!NPC) { continue; }
+			const float D = FVector::DistSquared(GetActorLocation(), NPC->GetActorLocation());
+			if (D < BestDistSq)
+			{
+				BestDistSq = D;
+				Best = NPC;
+			}
+		}
+
+		if (Best)
+		{
+			Best->TryStartDialogue(this);
+			return;
 		}
 	}
 
-	if (Best) { Best->TryStartDialogue(this); }
+	// 2순위: EnemyEncounter
+	{
+		AEnemyEncounter* Best = nullptr;
+		float BestDistSq = TNumericLimits<float>::Max();
+		for (TActorIterator<AEnemyEncounter> It(GetWorld()); It; ++It)
+		{
+			AEnemyEncounter* Enc = *It;
+			if (!Enc || !Enc->bPlayerInRange || Enc->bDefeated) { continue; }
+			const float D = FVector::DistSquared(GetActorLocation(), Enc->GetActorLocation());
+			if (D < BestDistSq)
+			{
+				BestDistSq = D;
+				Best = Enc;
+			}
+		}
+
+		if (Best)
+		{
+			Best->TryInteract(this);
+		}
+	}
 }
