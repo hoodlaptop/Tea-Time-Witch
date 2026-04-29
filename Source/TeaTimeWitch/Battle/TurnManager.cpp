@@ -20,11 +20,23 @@ void ATurnManager::StartBattle()
 	ChangeState(EBattleState::BattleStart);
 }
 
+void ATurnManager::RequestPlayerAction(FName SkillID, ABattleCharacter* Target)
+{
+	if (CurrentState != EBattleState::PlayerTurn) { return; }
+	if (!bWaitingForPlayerInput) { return; }
+	if (!QueuedActor || !Target || SkillID.IsNone()) { return; }
+
+	QueuedSkillID = SkillID;
+	QueuedTarget = Target;
+	ChangeState(EBattleState::ActionExecuting);
+}
+
 void ATurnManager::ChangeState(EBattleState NewState)
 {
 	CurrentState = NewState;
 	StateTimer = 0.f;
 	bActionExecuted = false;
+	bWaitingForPlayerInput = false;
 
 	if (bDebugTurnLog && GEngine)
 	{
@@ -149,8 +161,20 @@ void ATurnManager::Handle_PlayerTurn(float)
 		ChangeState(EBattleState::TurnEnd);
 		return;
 	}
-	DecidePlayerAction(QueuedActor);
-	ChangeState(EBattleState::ActionExecuting);
+
+	if (bDebugAutoBattle)
+	{
+		DecidePlayerAction(QueuedActor);
+		ChangeState(EBattleState::ActionExecuting);
+		return;
+	}
+
+	// 입력 대기: 진입 첫 프레임에 한 번만 브로드캐스트, 외부 RequestPlayerAction 대기
+	if (!bWaitingForPlayerInput)
+	{
+		bWaitingForPlayerInput = true;
+		OnPlayerActionRequested.Broadcast(QueuedActor);
+	}
 }
 
 void ATurnManager::Handle_EnemyTurn(float)
@@ -212,8 +236,13 @@ void ATurnManager::Handle_ActionExecuting(float)
 void ATurnManager::ExecuteQueuedAction()
 {
 	if (!QueuedActor || !QueuedTarget || QueuedSkillID == NAME_None) { return; }
-	QueuedActor->GetSkillComponent()->TryUseSkill(QueuedSkillID, QueuedActor, QueuedTarget);
+
+	const FBattleActionResult Result =
+		QueuedActor->GetSkillComponent()->TryUseSkill(QueuedSkillID, QueuedActor, QueuedTarget);
+
+	OnActionExecuted.Broadcast(Result);
 }
+
 
 void ATurnManager::Handle_TurnEnd(float)
 {
@@ -251,7 +280,8 @@ bool ATurnManager::CheckBattleEnd()
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Magenta, TEXT("BATTLE WON"));
 		}
-		
+
+		OnBattleEnded.Broadcast(true);
 		SetActorTickEnabled(false);
 		return true;
 	}
@@ -262,7 +292,8 @@ bool ATurnManager::CheckBattleEnd()
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, TEXT("BATTLE LOST"));
 		}
-		
+
+		OnBattleEnded.Broadcast(false);
 		SetActorTickEnabled(false);
 		return true;
 	}

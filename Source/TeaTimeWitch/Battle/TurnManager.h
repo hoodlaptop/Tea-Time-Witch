@@ -10,6 +10,12 @@ class ABattleManager;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBattleStateChanged, EBattleState, NewState);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerActionRequested, ABattleCharacter*, Actor);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActionExecuted, const FBattleActionResult&, Result);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBattleEnded, bool, bWon);
+
 UCLASS()
 class TEATIMEWITCH_API ATurnManager : public AActor
 {
@@ -28,6 +34,19 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnBattleStateChanged OnStateChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnPlayerActionRequested OnPlayerActionRequested;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnActionExecuted OnActionExecuted;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnBattleEnded OnBattleEnded;
+
+	// 외부(UI)에서 호출. PlayerTurn 상태에서만 유효.
+	UFUNCTION(BlueprintCallable)
+	void RequestPlayerAction(FName SkillID, ABattleCharacter* Target);
 
 protected:
 	void ChangeState(EBattleState NewState);
@@ -67,7 +86,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<ABattleCharacter> QueuedTarget;
 	FName QueuedSkillID = NAME_None;
-	bool bActionExecuted = false;
 
 	float StateTimer = 0.f;
 
@@ -84,4 +102,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="Debug")
 	bool bDebugTurnLog = false;
+	UPROPERTY(EditAnywhere, Category="Debug")
+	bool bDebugAutoBattle = false;
+
+	bool bActionExecuted = false;
+	bool bWaitingForPlayerInput = false;
 };

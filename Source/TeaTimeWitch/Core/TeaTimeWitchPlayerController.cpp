@@ -41,5 +41,14 @@ void ATeaTimeWitchPlayerController::SetTeaShopInputState(ETeaShopInputState NewS
 			if (GetPawn()) { DisableInput(this); }
 			break;
 		}
+	case ETeaShopInputState::Battle:
+		{
+			FInputModeUIOnly Mode;
+			if (FocusWidget) { Mode.SetWidgetToFocus(FocusWidget->TakeWidget()); }
+			SetInputMode(Mode);
+			SetShowMouseCursor(true);
+			if (GetPawn()) { DisableInput(this); }
+			break;
+		}
 	}
 }

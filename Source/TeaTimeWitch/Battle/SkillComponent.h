@@ -17,14 +17,16 @@ public:
 
 	void Init(class UDataTable* InSkillTable, const TArray<FName>& InSkillIDs);
 
-	bool TryUseSkill(FName SkillID, ABattleCharacter* User, ABattleCharacter* Target);
+	FBattleActionResult TryUseSkill(FName SkillID, ABattleCharacter* User, ABattleCharacter* Target);
 
 	UFUNCTION(BlueprintPure)
 	bool HasSkill(FName SkillID) const { return SkillIDs.Contains(SkillID); }
 
 	UFUNCTION(BlueprintPure)
 	const TArray<FName>& GetSkillIDs() const { return SkillIDs; }
-
+	
+	const FSkillData* GetSkillData(FName SkillID) const;
+	
 	FName PickFirstAvailableSkill(int32 CurrentMP) const;
 
 protected:

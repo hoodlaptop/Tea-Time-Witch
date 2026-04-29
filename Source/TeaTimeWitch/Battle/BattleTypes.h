@@ -4,6 +4,8 @@
 #include "Engine/DataTable.h"
 #include "BattleTypes.generated.h"
 
+class ABattleCharacter;
+
 UENUM(BlueprintType)
 enum class EBattleSide : uint8
 {
@@ -81,4 +83,31 @@ struct FSkillData : public FTableRowBase
 	EEmotionType AromaType = EEmotionType::None;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bTargetEnemy = true;
+};
+
+USTRUCT(BlueprintType)
+struct FBattleActionResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	ABattleCharacter* Source = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
+	ABattleCharacter* Target = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
+	FName SkillID;
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 Damage = 0;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bWeakness = false;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bCritical = false;   // (현재 미사용)
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bMissed = false;     // (현재 미사용)
 };

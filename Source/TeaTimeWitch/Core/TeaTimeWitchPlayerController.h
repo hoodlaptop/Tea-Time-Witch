@@ -9,7 +9,8 @@ enum class ETeaShopInputState : uint8
 {
 	Game,
 	Dialogue,
-	Crafting
+	Crafting,
+	Battle
 };
 
 UCLASS()

@@ -20,6 +20,7 @@ public:
 
 	const TArray<TObjectPtr<ABattleCharacter>>& GetAllies() const { return Allies; }
 	const TArray<TObjectPtr<ABattleCharacter>>& GetEnemies() const { return Enemies; }
+	ATurnManager* GetTurnManager() const { return TurnManager; }
 
 protected:
 	void SpawnCharacters();
