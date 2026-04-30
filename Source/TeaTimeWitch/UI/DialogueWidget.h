@@ -5,6 +5,7 @@
 #include "../Dialogue/TTWDialogueTypes.h"
 #include "DialogueWidget.generated.h"
 
+class UImage;
 class UDialogueSystem;
 class UTextBlock;
 class UButton;
@@ -18,12 +19,15 @@ class TEATIMEWITCH_API UDialogueWidget : public UCommonUserWidget
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UTextBlock> SpeakerNameText;
-
+	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UTextBlock> DialogueText;
 
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> ContinueButton;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UImage> SpeakerPortrait;
 
 	UPROPERTY()
 	TObjectPtr<UDialogueSystem> DialogueSubsystem;

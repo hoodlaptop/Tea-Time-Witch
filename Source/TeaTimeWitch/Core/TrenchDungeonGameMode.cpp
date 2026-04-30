@@ -57,27 +57,34 @@ void ATrenchDungeonGameMode::PostLogin(class APlayerController* NewPlayer)
 	{
 		TPC->SetTeaShopInputState(ETeaShopInputState::Game, nullptr);
 	}
+}
+
+void ATrenchDungeonGameMode::RestartPlayer(AController* NewPlayer)
+{
+	Super::RestartPlayer(NewPlayer);
 	
 	UGameInstance* GI = GetGameInstance();
 	if (!GI) return;
 	UDungeonProgressSubsystem* DP = GI->GetSubsystem<UDungeonProgressSubsystem>();
 	if (!DP) return;
-
-	if (!DP->bIsReturningFromBattle) return;
-	if (DP->PlayerReturnLocation.IsNearlyZero()) return;
-
-	if (APawn* Pawn = NewPlayer->GetPawn())
+	
+	// 전투에서 복귀 중이고, 유효한 복귀 위치가 있는 경우에만 텔레포트
+	if (DP->bIsReturningFromBattle && !DP->PlayerReturnLocation.IsNearlyZero())
 	{
-		Pawn->SetActorLocation(
-			DP->PlayerReturnLocation,
-			false,
-			nullptr,
-			ETeleportType::TeleportPhysics);
-		UE_LOG(LogTemp, Log, TEXT("[Trench] Returned from battle, teleported to %s"),
-		       *DP->PlayerReturnLocation.ToString());
+		if (APawn* Pawn = NewPlayer->GetPawn())
+		{
+			// TeleportPhysics를 사용하여 물리 엔진의 간섭 없이 정확한 위치로 이동
+			Pawn->SetActorLocation(
+				DP->PlayerReturnLocation,
+				false,
+				nullptr,
+				ETeleportType::TeleportPhysics);
+			UE_LOG(LogTemp, Log, TEXT("[Trench] Returned from battle, teleported to %s"),
+				   *DP->PlayerReturnLocation.ToString());
+		}
+		// 처리가 완료되었으므로 플래그 초기화
+		DP->bIsReturningFromBattle = false;
 	}
-
-	DP->bIsReturningFromBattle = false;
 }
 
 void ATrenchDungeonGameMode::HandleEncounterCleared(FName ClearedEncounterID)

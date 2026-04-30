@@ -47,6 +47,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	const FCharacterStatData& GetStatData() const { return Stats; }
 
+	UFUNCTION(BlueprintPure)
+	UTexture2D* GetPortraitTexture() const { return PortraitTexture; }
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnHPChanged OnHPChanged;
 	UPROPERTY(BlueprintAssignable)
@@ -55,9 +58,13 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere)
 	FCharacterStatData Stats;
+	
 	UPROPERTY(VisibleAnywhere)
 	int32 CurrentHP = 0;
 	UPROPERTY(VisibleAnywhere)
 	int32 CurrentMP = 0;
 	bool bDeathBroadcast = false;
+	
+	UPROPERTY(BlueprintReadOnly, Category="Stats")
+	TObjectPtr<UTexture2D> PortraitTexture;
 };

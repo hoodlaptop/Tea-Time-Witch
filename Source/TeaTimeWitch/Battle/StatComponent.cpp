@@ -11,6 +11,7 @@ void UStatComponent::InitFromData(const FCharacterStatData& Data)
 	CurrentHP = Stats.MaxHP;
 	CurrentMP = Stats.MaxMP;
 	bDeathBroadcast = false;
+	PortraitTexture = Data.PortraitTexture;
 }
 
 int32 UStatComponent::TakeDamage(int32 RawDamage, EEmotionType DamageAroma)

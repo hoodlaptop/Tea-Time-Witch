@@ -23,6 +23,7 @@ protected:
 	virtual void BeginPlay() override;
 	
 	virtual void PostLogin(class APlayerController* NewPlayer) override;
+	virtual void RestartPlayer(AController* NewPlayer) override;
 	
 	UFUNCTION()
 	void HandleEncounterCleared(FName ClearedEncounterID);

@@ -57,24 +57,41 @@ void UBattleCharacterWidget::NativeDestruct()
 
 void UBattleCharacterWidget::Refresh()
 {
+	// 타겟 캐릭터 유효성 검증
 	if (!TargetCharacter) { return; }
+    
 	UStatComponent* Stat = TargetCharacter->GetStatComponent();
+    
+	// 스탯 컴포넌트 유효성 검증 (오류 수정됨: Stat -> !Stat)
 	if (!Stat) { return; }
 
-	if (NameText) { NameText->SetText(Stat->GetDisplayName()); }
+	// 이름 텍스트 업데이트
+	if (NameText) 
+	{ 
+		NameText->SetText(Stat->GetDisplayName()); 
+	}
 
+	// HP 업데이트
 	HandleHPChanged(Stat->GetCurrentHP(), Stat->GetMaxHP());
 
+	// 초상화 업데이트 (요청하신 추가 코드 적용)
+	if (PortraitImage && Stat->GetPortraitTexture())
+	{
+		PortraitImage->SetBrushFromTexture(Stat->GetPortraitTexture());
+	}
+
+	// MP 업데이트
 	const int32 MaxMP = Stat->GetStatData().MaxMP;
 	if (MPBar)
 	{
-		MPBar->SetPercent(MaxMP > 0 ? (float)Stat->GetCurrentMP() / (float)MaxMP : 0.f);
+		MPBar->SetPercent(MaxMP > 0 ? static_cast<float>(Stat->GetCurrentMP()) / static_cast<float>(MaxMP) : 0.f);
 	}
 	if (MPText)
 	{
 		MPText->SetText(FText::FromString(FString::Printf(TEXT("%d/%d"), Stat->GetCurrentMP(), MaxMP)));
 	}
 
+	// 생존 여부에 따른 투명도 업데이트
 	SetRenderOpacity(Stat->IsDead() ? 0.5f : 1.f);
 }
 

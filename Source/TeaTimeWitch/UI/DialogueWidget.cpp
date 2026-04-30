@@ -2,6 +2,7 @@
 
 #include "DialogueSystem.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 
 void UDialogueWidget::NativeConstruct()
@@ -69,6 +70,7 @@ FReply UDialogueWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyE
 
 void UDialogueWidget::HandleLineChanged(const FDialogueLine& Line)
 {
+	// 이름과 대사 업데이트
 	if (SpeakerNameText)
 	{
 		SpeakerNameText->SetText(Line.SpeakerName);
@@ -76,6 +78,22 @@ void UDialogueWidget::HandleLineChanged(const FDialogueLine& Line)
 	if (DialogueText)
 	{
 		DialogueText->SetText(Line.Text);
+	}
+
+	// 초상화 업데이트
+	if (SpeakerPortrait)
+	{
+		// 데이터 테이블(구조체)에 할당된 텍스처가 있는지 확인
+		if (Line.PortraitTexture) 
+		{
+			SpeakerPortrait->SetBrushFromTexture(Line.PortraitTexture);
+			SpeakerPortrait->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		}
+		else
+		{
+			// 할당된 텍스처가 없다면 초상화 숨김 (내레이션 처리)
+			SpeakerPortrait->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 
 	if (ContinueButton)

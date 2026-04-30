@@ -49,6 +49,9 @@ struct FCharacterStatData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText DisplayName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UTexture2D> PortraitTexture;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 MaxHP = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 MaxMP = 50;
@@ -58,10 +61,12 @@ struct FCharacterStatData : public FTableRowBase
 	int32 Defense = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Speed = 50;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EEmotionType EmotionType = EEmotionType::None;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EEmotionType WeaknessAroma = EEmotionType::None;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName DefaultSkillID; // 기본 스킬 1개만
 };
@@ -76,9 +81,13 @@ struct FSkillData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText DisplayName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UTexture2D> Icon;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 BasePower = 30;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 MPCost = 10;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EEmotionType AromaType = EEmotionType::None;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -106,8 +115,8 @@ struct FBattleActionResult
 	bool bWeakness = false;
 
 	UPROPERTY(BlueprintReadOnly)
-	bool bCritical = false;   // (현재 미사용)
+	bool bCritical = false; // (현재 미사용)
 
 	UPROPERTY(BlueprintReadOnly)
-	bool bMissed = false;     // (현재 미사용)
+	bool bMissed = false; // (현재 미사용)
 };
