@@ -99,7 +99,9 @@ void UDialogueSystem::ProcessCurrentLineAction()
 		bWaitingForActionResult = true;
 		OnAction.Broadcast(CurrentLine.Action, CurrentLine.ActionParam);
 		return;
-
+	case EDialogueAction::EnterDungeon:
+		OnAction.Broadcast(CurrentLine.Action, CurrentLine.ActionParam);
+		return;
 	case EDialogueAction::EndDialogue:
 		EndConversation();
 		return;

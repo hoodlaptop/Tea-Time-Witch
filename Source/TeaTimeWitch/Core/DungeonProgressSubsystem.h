@@ -39,6 +39,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="Dungeon|Battle")
 	bool bPendingIsFinalEncounter = false;
 
+	UPROPERTY(BlueprintReadOnly, Category="Dungeon|Battle")
+	bool bIsReturningFromBattle = false;
+	
+	UPROPERTY(BlueprintReadOnly, Category="Dungeon")
+	bool bIsReturningFromDungeon = false;
+	
+	UPROPERTY(BlueprintReadOnly, Category="Dungeon")
+	FName LastClearedDungeonID;
+	
 	// --- DeBug ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Dungeon|Debug")
 	bool bShowDungeonDebug = false;
@@ -66,6 +75,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Dungeon")
 	void ClearDungeon();
+	
+	UFUNCTION(BlueprintCallable, Category="Dungeon")
+	void ExitDungeon(FName ReturnLevel);
 
 	// --- Event --
 	UPROPERTY(BlueprintAssignable, Category="Dungeon")

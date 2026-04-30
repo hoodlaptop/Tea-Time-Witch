@@ -10,7 +10,8 @@ enum class EDialogueAction : uint8
 	JumpTo,
 	OpenTeaCraft,
 	StartBattle,
-	EndDialogue
+	EndDialogue,
+	EnterDungeon
 };
 
 USTRUCT(BlueprintType)

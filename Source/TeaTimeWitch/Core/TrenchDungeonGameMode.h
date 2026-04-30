@@ -22,6 +22,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
+	virtual void PostLogin(class APlayerController* NewPlayer) override;
+	
 	UFUNCTION()
 	void HandleEncounterCleared(FName ClearedEncounterID);
 	

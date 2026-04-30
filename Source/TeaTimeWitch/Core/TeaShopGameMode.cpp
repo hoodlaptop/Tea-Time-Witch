@@ -1,5 +1,7 @@
 #include "Core/TeaShopGameMode.h"
 
+#include "DungeonProgressSubsystem.h"
+#include "EngineUtils.h"
 #include "TeaTimeWitchPlayerController.h"
 #include "../Characters/EliaCharacter.h"
 #include "../Characters/NPCBase.h"
@@ -39,6 +41,31 @@ void ATeaShopGameMode::BeginPlay()
 			bBrewBound = true;
 		}
 	}
+	
+	if (auto* TPC = Cast<ATeaTimeWitchPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
+	{
+		TPC->SetTeaShopInputState(ETeaShopInputState::Game, nullptr);
+	}
+	
+	if (auto* DP = GetGameInstance()->GetSubsystem<UDungeonProgressSubsystem>())
+	{
+		if (DP->bIsReturningFromDungeon && DP->LastClearedDungeonID == TEXT("Trench"))
+		{
+			for (TActorIterator<ANPCBase> It(GetWorld()); It; ++It)
+			{
+				ANPCBase* NPC = *It;
+				if (!NPC) continue;
+
+				// 아릭 식별: StartLineID prefix로 매칭 (또는 NPC 클래스/태그로)
+				if (NPC->StartLineID == TEXT("Aric_001"))   // 실제 시작 라인 ID로 교체(현재는 가정)
+				{
+					NPC->StartLineID = TEXT("Aric_AfterDungeon");
+					UE_LOG(LogTemp, Log, TEXT("[GM] Aric line switched to Aric_AfterDungeon"));
+				}
+			}
+			DP->bIsReturningFromDungeon = false;
+		}
+	}
 }
 
 void ATeaShopGameMode::HandleDialogueStarted(ANPCBase* /*Speaker*/)
@@ -71,13 +98,38 @@ void ATeaShopGameMode::HandleDialogueEnded()
 
 void ATeaShopGameMode::HandleDialogueAction(EDialogueAction Action, FName Param)
 {
+	if (Action == EDialogueAction::EnterDungeon)
+	{
+		if (Param.IsNone())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[GM] EnterDungeon: ActionParam is empty"));
+			return;
+		}
+
+		// 대화 종료
+		if (UDialogueSystem* DS = GetWorld()->GetSubsystem<UDialogueSystem>())
+		{
+			DS->EndConversation();
+		}
+
+		// 던전 ID 등록
+		if (auto* DP = GetGameInstance()->GetSubsystem<UDungeonProgressSubsystem>())
+		{
+			DP->EnterDungeon(TEXT("Trench"));
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("[GM] EnterDungeon -> %s"), *Param.ToString());
+		UGameplayStatics::OpenLevel(this, Param);
+		return;
+	}
 	if (Action == EDialogueAction::StartBattle)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[GM] StartBattle requested (Param=%s) — B10 예정"), *Param.ToString());
 		return;
 	}
+	
 	if (Action != EDialogueAction::OpenTeaCraft) { return; }
-
+	
 	AEliaCharacter* Elia = GetElia();
 	UTeaCraftingComponent* Comp = Elia ? Elia->GetCraftingComp() : nullptr;
 	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);

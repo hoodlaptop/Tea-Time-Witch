@@ -1,6 +1,7 @@
 #include "Core/TrenchDungeonGameMode.h"
 
 #include "DungeonProgressSubsystem.h"
+#include "TeaTimeWitchPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 
 ATrenchDungeonGameMode::ATrenchDungeonGameMode()
@@ -46,6 +47,37 @@ void ATrenchDungeonGameMode::BeginPlay()
 	DP->OnDungeonCleared.AddDynamic(this, &ATrenchDungeonGameMode::HandleDungeonCleared);
 
 	DP->bShowDungeonDebug = bShowDungeonDebug;
+}
+
+void ATrenchDungeonGameMode::PostLogin(class APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	if (auto* TPC = Cast<ATeaTimeWitchPlayerController>(NewPlayer))
+	{
+		TPC->SetTeaShopInputState(ETeaShopInputState::Game, nullptr);
+	}
+	
+	UGameInstance* GI = GetGameInstance();
+	if (!GI) return;
+	UDungeonProgressSubsystem* DP = GI->GetSubsystem<UDungeonProgressSubsystem>();
+	if (!DP) return;
+
+	if (!DP->bIsReturningFromBattle) return;
+	if (DP->PlayerReturnLocation.IsNearlyZero()) return;
+
+	if (APawn* Pawn = NewPlayer->GetPawn())
+	{
+		Pawn->SetActorLocation(
+			DP->PlayerReturnLocation,
+			false,
+			nullptr,
+			ETeleportType::TeleportPhysics);
+		UE_LOG(LogTemp, Log, TEXT("[Trench] Returned from battle, teleported to %s"),
+		       *DP->PlayerReturnLocation.ToString());
+	}
+
+	DP->bIsReturningFromBattle = false;
 }
 
 void ATrenchDungeonGameMode::HandleEncounterCleared(FName ClearedEncounterID)
