@@ -1,6 +1,7 @@
 #include "BattleManager.h"
 
 #include "BattleCharacter.h"
+#include "DungeonProgressSubsystem.h"
 #include "TurnManager.h"
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
@@ -13,6 +14,26 @@ ABattleManager::ABattleManager()
 void ABattleManager::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UDungeonProgressSubsystem* DP = GI->GetSubsystem<UDungeonProgressSubsystem>())
+		{
+			const bool bHasValidDungeonBattlePayload =
+				!DP->PendingBattleEncounterID.IsNone() &&
+				DP->PendingEnemyIDs.Num() > 0;
+
+			if (bHasValidDungeonBattlePayload)
+			{
+				EnemyIDs = DP->PendingEnemyIDs;
+
+				UE_LOG(LogTemp, Log,
+				       TEXT("[BattleManager] Loaded %d enemies from DungeonProgressSubsystem. Encounter=%s"),
+				       EnemyIDs.Num(),
+				       *DP->PendingBattleEncounterID.ToString());
+			}
+		}
+	}
 
 	if (!AllyClass || !EnemyClass)
 	{

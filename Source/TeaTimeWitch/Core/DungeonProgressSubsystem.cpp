@@ -28,16 +28,33 @@ bool UDungeonProgressSubsystem::IsEncounterCleared(FName EncounterID) const
 void UDungeonProgressSubsystem::RequestBattleTransition(FName EncounterID, const TArray<FName>& EnemyIDs,
                                                         FVector ReturnLoc, FName ReturnLevel, bool bIsFinalEncounter)
 {
+	if (EncounterID.IsNone())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Dungeon] RequestBattleTransition failed: EncounterID is None"));
+		return;
+	}
+
+	if (EnemyIDs.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Dungeon] RequestBattleTransition failed: EnemyIDs is empty"));
+		return;
+	}
+
+	if (ReturnLevel.IsNone())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Dungeon] RequestBattleTransition failed: ReturnLevel is None"));
+		return;
+	}
+	
 	PendingBattleEncounterID = EncounterID;
 	PendingEnemyIDs = EnemyIDs;
 	PlayerReturnLocation = ReturnLoc;
 	ReturnDungeonLevel = ReturnLevel;
 	bPendingIsFinalEncounter = bIsFinalEncounter;
-
-	UE_LOG(LogTemp, Log,
-	       TEXT("[Dungeon] BattleTransition stub - Encounter = %s, EnemyCounter = %d, ReturnLevel = %s, Final = %d"),
-	       *EncounterID.ToString(), EnemyIDs.Num(), *ReturnLevel.ToString(), bIsFinalEncounter ? 1 : 0);
-
+	
+	UE_LOG(LogTemp, Log, TEXT("[Dungeon] BattleTransition - Encounter=%s, EnemyCount=%d, ReturnLevel=%s, Final=%d"),
+		*EncounterID.ToString(), EnemyIDs.Num(), *ReturnLevel.ToString(), bIsFinalEncounter ? 1 : 0);
+	
 	bIsReturningFromBattle = false;
 	UGameplayStatics::OpenLevel(this, TEXT("BattleLevel"));
 }
@@ -55,18 +72,32 @@ void UDungeonProgressSubsystem::OnBattleResult(bool bWon)
 
 	if (bWasFinal)
 	{
+		PendingBattleEncounterID = NAME_None;
+		PendingEnemyIDs.Reset();
+		PlayerReturnLocation = FVector::ZeroVector;
+		ReturnDungeonLevel = NAME_None;
+		bPendingIsFinalEncounter = false;
+		bIsReturningFromBattle = false;
+
 		ClearDungeon();
 		return;
 	}
 
 	if (ReturnDungeonLevel.IsNone())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Dungeon] OnBattleResult: ReturnDungeonLevel is None — cannot return"));
+		UE_LOG(LogTemp, Warning, TEXT("[Dungeon] OnBattleResult: ReturnDungeonLevel is None - cannot return"));
 		return;
 	}
+	
+	const FName LevelToReturn = ReturnDungeonLevel;
+	
+	PendingBattleEncounterID = NAME_None;
+	PendingEnemyIDs.Reset();
+	ReturnDungeonLevel = NAME_None;
+	bPendingIsFinalEncounter = false;
 
 	bIsReturningFromBattle = true;
-	UGameplayStatics::OpenLevel(this, ReturnDungeonLevel);
+	UGameplayStatics::OpenLevel(this, LevelToReturn);
 }
 
 void UDungeonProgressSubsystem::ClearDungeon()

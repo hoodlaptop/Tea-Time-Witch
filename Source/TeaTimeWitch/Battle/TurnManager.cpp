@@ -235,10 +235,25 @@ void ATurnManager::Handle_ActionExecuting(float)
 
 void ATurnManager::ExecuteQueuedAction()
 {
-	if (!QueuedActor || !QueuedTarget || QueuedSkillID == NAME_None) { return; }
+	if (!QueuedActor || !QueuedTarget || QueuedSkillID == NAME_None)
+	{
+		UE_LOG(LogTemp, Warning,
+		       TEXT("[TurnManager] ExecuteQueuedAction failed: Actor=%s, Target=%s, Skill=%s"),
+		       QueuedActor ? *QueuedActor->GetName() : TEXT("None"),
+		       QueuedTarget ? *QueuedTarget->GetName() : TEXT("None"),
+		       *QueuedSkillID.ToString());
+		return;
+	}
+
+	USkillComponent* SkillComponent = QueuedActor->GetSkillComponent();
+	if (!SkillComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[TurnManager] ExecuteQueuedAction failed: SkillComponent is null"));
+		return;
+	}
 
 	const FBattleActionResult Result =
-		QueuedActor->GetSkillComponent()->TryUseSkill(QueuedSkillID, QueuedActor, QueuedTarget);
+		SkillComponent->TryUseSkill(QueuedSkillID, QueuedActor, QueuedTarget);
 
 	OnActionExecuted.Broadcast(Result);
 }

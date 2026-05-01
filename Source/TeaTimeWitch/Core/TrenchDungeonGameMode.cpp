@@ -69,7 +69,7 @@ void ATrenchDungeonGameMode::RestartPlayer(AController* NewPlayer)
 	if (!DP) return;
 	
 	// 전투에서 복귀 중이고, 유효한 복귀 위치가 있는 경우에만 텔레포트
-	if (DP->bIsReturningFromBattle && !DP->PlayerReturnLocation.IsNearlyZero())
+	if (DP->bIsReturningFromBattle)
 	{
 		if (APawn* Pawn = NewPlayer->GetPawn())
 		{
@@ -84,6 +84,7 @@ void ATrenchDungeonGameMode::RestartPlayer(AController* NewPlayer)
 		}
 		// 처리가 완료되었으므로 플래그 초기화
 		DP->bIsReturningFromBattle = false;
+		DP->PlayerReturnLocation = FVector::ZeroVector;
 	}
 }
 
